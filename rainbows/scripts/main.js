@@ -56,11 +56,12 @@
   class Pointer {
     constructor (id, startingPosition, diameter) {
       this.diameter = diameter || (Math.random() * 50);
+      this.borderWidth = 2;
       this.element = document.createElement('div');
       this.element.id = id;
       this.element.className = 'pointer';
       this.element.style.height = this.element.style.width = `${this.diameter}px`;
-      this.element.style.borderRadius = `${this.diameter / 2 + 2}px`
+      this.element.style.borderRadius = `${this.diameter / 2}px`
       this.position = startingPosition;
       let xDirection = Math.random() >= 0.5 ? 1 : -1;
       let yDirection = Math.random() >= 0.5 ? 1 : -1;
@@ -80,7 +81,7 @@
     }
 
     rightSide () {
-      return this.position.x + this.diameter;
+      return this.position.x + this.diameter + 2 * this.borderWidth;
     }
 
     topSide () {
@@ -88,7 +89,7 @@
     }
 
     bottomSide () {
-      return this.position.y + this.diameter;
+      return this.position.y + this.diameter + 2 * this.borderWidth;
     }
 
     updateBackgroundColor () {

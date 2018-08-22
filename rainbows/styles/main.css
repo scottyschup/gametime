@@ -6,6 +6,7 @@
 }
 
 .pointer {
-  border: 2px solid white;
+  border-style: solid;
+  border-color: white;
   position: absolute;
 }
