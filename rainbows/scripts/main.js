@@ -1,149 +1,102 @@
-(() => {
-  class Rainbows {
-    constructor (canvasId, numPointers = 1) {
-      this.canvas = new Canvas();
-      this.pointers = [];
-      const startingPosition = { x: this.canvas.width() / 2, y: this.canvas.height() / 2 };
-      for (let i = 0; i < numPointers; i++) {
-        this.pointers.push(new Pointer(`pointer${i}`, startingPosition));
-      }
-    }
+import { Canvas } from './canvas.js';
+import { Color } from './color.js';
+import { Circle } from './circle.js';
 
-    movePointers () {
-      this.pointers.forEach(pointer => {
-        pointer.move();
-        this.redirectIfSideCollision(pointer);
-      })
+export class Rainbows {
+  constructor (canvasId, numCircles = 100) {
+    this.canvas = new Canvas();
+    this.circles = [];
+    this.intervalId = null;
+    this.fps = 40;
+    const startingPosition = { x: this.canvas.width() / 2, y: this.canvas.height() / 2 };
+    for (let i = 0; i < numCircles; i++) {
+      let diameter = Math.random() * Math.random() * 150 + 20;
+      this.circles.push(new Circle(`circle${i}`, startingPosition, diameter));
     }
+  }
 
-    redirectIfSideCollision (pointer) {
-      if (pointer.leftSide() <= 0 || pointer.rightSide() >= this.canvas.width()) {
-        pointer.direction.x *= -1;
-      }
-      if (pointer.topSide() <= 0 || pointer.bottomSide() >= this.canvas.height()) {
-        pointer.direction.y *= -1;
-      }
+  mss () {
+    this.fps = Math.round(this.fps);
+    return 1000 / +this.fps;
+  }
+
+  moveCircles () {
+    this.circles.forEach(circle => {
+      circle.updateBackgroundColor();
+      circle.move();
+      this.redirectIfSideCollision(circle);
+    })
+  }
+
+  redirectIfSideCollision (circle) {
+    if (circle.leftSide() <= 0 || circle.rightSide() >= this.canvas.width()) {
+      circle.direction.x *= -1;
     }
-
-    render () {
-      this.pointers.forEach(pointer => {
-        pointer.element.style.left = `${pointer.position.x}px`;
-        pointer.element.style.top = `${pointer.position.y}px`;
-        this.canvas.drawPointer(pointer.element);
-      });
+    if (circle.topSide() <= 0 || circle.bottomSide() >= this.canvas.height()) {
+      circle.direction.y *= -1;
     }
+  }
 
-    start () {
-      if (this.intervalId) {
-        console.log('Rainbows has already been started.')
-        return;
-      }
-      this.intervalId = setInterval(() => {
-        this.movePointers();
+  render () {
+    this.circles.forEach(circle => {
+      circle.element.style.left = `${circle.position.x}px`;
+      circle.element.style.top = `${circle.position.y}px`;
+      this.canvas.drawCircle(circle.element);
+    });
+  }
+
+  start () {
+    if (this.intervalId) {
+      console.log('Rainbows has already been started.')
+      return;
+    }
+    this.intervalId = setInterval(() => {
+      try {
+        const playButton = document.getElementById('play-button');
+        const controls = document.getElementById('controls');
+        controls.classList.add('fadeout');
+        this.moveCircles();
+        this.canvas.updateBackgroundColor();
+        this.updateRGB(this.canvas.color);
         this.render();
-      }, 60);
-    }
-
-    stop () {
-      if (!this.intervalId) {
-        console.log('Rainbows has not yet been started.')
-        return;
+      } catch (e) {
+        this.stop();
+        console.error(e);
       }
-      clearInterval(this.intervalId);
-    }
+    }, this.mss());
   }
 
-  class Pointer {
-    constructor (id, startingPosition, diameter) {
-      this.diameter = diameter || (Math.random() * 50);
-      this.borderWidth = 2;
-      this.element = document.createElement('div');
-      this.element.id = id;
-      this.element.className = 'pointer';
-      this.element.style.height = this.element.style.width = `${this.diameter}px`;
-      this.element.style.borderRadius = `${this.diameter / 2}px`
-      this.position = startingPosition;
-      let xDirection = Math.random() >= 0.5 ? 1 : -1;
-      let yDirection = Math.random() >= 0.5 ? 1 : -1;
-      this.direction = { x: Math.random() * xDirection, y: Math.random() * yDirection };
-      this.velocity = 10;
-      this.element.style.backgroundColor = this.color = new Color;
+  stop () {
+    if (!this.intervalId) {
+      console.log('Rainbows has not yet been started.')
+      return;
     }
-
-    move () {
-      const newX = this.position.x + this.direction.x * this.velocity;
-      const newY = this.position.y + this.direction.y * this.velocity;
-      this.position = { x: newX, y: newY };
-    }
-
-    leftSide () {
-      return this.position.x;
-    }
-
-    rightSide () {
-      return this.position.x + this.diameter + 2 * this.borderWidth;
-    }
-
-    topSide () {
-      return this.position.y;
-    }
-
-    bottomSide () {
-      return this.position.y + this.diameter + 2 * this.borderWidth;
-    }
-
-    updateBackgroundColor () {
-      this.color = this.color.updateColor();
-      this.element.style.backgroundColor = 'rgb('
-    }
+    clearInterval(this.intervalId);
+    window.Rbs.playButton.classList.remove('fadeout');
+    this.intervalId = null;
   }
 
-  class Canvas {
-    constructor (height, width) {
-      this.element = document.createElement('div');
-      this.element.className = 'canvas';
-      this.element.style.height = `${height || window.innerHeight}px`;
-      this.element.style.width = `${width ||window.innerWidth}px`;
-      document.body.appendChild(this.element);
-    }
-
-    height () {
-      return Number(this.element.style.height.slice(0, -2));
-    }
-
-    width () {
-      return Number(this.element.style.width.slice(0, -2));
-    }
-
-    drawPointer (pointer) {
-      this.element.appendChild(pointer);
-    }
+  restart () {
+    this.stop();
+    this.start();
   }
 
-  class Color {
-    constructor () {
-      this.r = Math.round(Math.random() * 255);
-      this.g = Math.round(Math.random() * 255);
-      this.b = Math.round(Math.random() * 255);
-      this.rDirection = Math.random() > 0.5;
-      this.gDirection = Math.random() > 0.5;
-      this.bDirection = Math.random() > 0.5;
-      this.velocity = Math.round(Math.random() * 10);
-    }
-
-    updateColor () {
-      this.r = this.r * this.rDirection * this.velocity;
-    }
+  changeSpeed (delta) {
+    if (this.fps < 1) return this.fps = 1;
+    if (this.fps > 150) return this.fps = 150;
+    const multiplier = 1 + (delta / 100);
+    this.fps = Math.round(this.fps * multiplier);
+    this.restart();
   }
 
-  // class Controls {
-  //   constructor () {
-  //     this.startButton = document.createElement('button');
-  //     this.startButton.className = 'start';
-  //     this.stopButton = document.createElement('button');
-  //     this.stopButton.className = 'stop';
-  //   }
-  // }
+  updateRGB (color) {
+    const colorR = document.getElementById('color-r');
+    const colorG = document.getElementById('color-g');
+    const colorB = document.getElementById('color-b');
+    colorR.innerHTML = Math.round(color.r);
+    colorG.innerHTML = Math.round(color.g);
+    colorB.innerHTML = Math.round(color.b);
+  }
+}
 
-  window.Rainbows = window.Rainbows || Rainbows;
-})();
+// window.Rainbows = window.Rainbows || Rainbows;

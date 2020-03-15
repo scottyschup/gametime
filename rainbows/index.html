@@ -6,9 +6,38 @@
   <script type="text/javascript" src="./scripts/main.js"></script>
 </head>
 <body>
-  <script type="text/javascript">
-    const rb = new Rainbows();
-    rb.start();
+  <div id="controls" class="controls">
+    <button id="play-button" onclick="Rbs.togglePlay();">|&gt;</button>
+    <button id="slower" class="speed-button" onclick="Rbs.changeSpeed(-5);">-</button>
+    <button id="faster" class="speed-button" onclick="Rbs.changeSpeed(5);">+</button>
+    <h2><span id="frame-rate"></span> FPS</h2>
+    <h3>
+      R: <span id="color-r"></span><br>
+      G: <span id="color-g"></span><br>
+      B: <span id="color-b"></span>
+  </div>
+  <script type="module">
+    import { Rainbows } from './scripts/main.js';
+    const Rbs = window.Rbs = {};
+    Rbs.rb = new Rainbows();
+    Rbs.playButton = document.getElementById("play-button");
+    Rbs.frameRate = document.getElementById("frame-rate");
+    Rbs.frameRate.innerHTML = Rbs.rb.fps;
+
+    window.Rbs.togglePlay = function togglePlay () {
+      if (Rbs.rb.intervalId) {
+        Rbs.rb.stop();
+        Rbs.playButton.innerHTML = "|>";
+      } else {
+        Rbs.rb.start();
+        Rbs.playButton.innerHTML = "||"
+      }
+    }
+
+    window.Rbs.changeSpeed = function changeSpeed (n) {
+      Rbs.rb.changeSpeed(n);
+      Rbs.frameRate.innerHTML = Rbs.rb.fps;
+    }
   </script>
 </body>
 </html>
