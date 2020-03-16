@@ -1,7 +1,7 @@
 .canvas {
   background-color: #000;
-  cursor: url(https://img.favpng.com/24/3/11/index-finger-pointer-cursor-arrow-png-favpng-i0wfBgC1nhHAgEXcvvbnGdNrc.jpg);
   left: 0;
+  overflow: hidden;
   position: absolute;
   top: 0;
   z-index: -1;
